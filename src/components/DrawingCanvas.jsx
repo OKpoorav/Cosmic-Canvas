@@ -54,6 +54,22 @@ const ControlsContainer = styled.div`
   }
 `;
 
+const ColorPaletteContainer = styled.div`
+  @media (max-width: 768px) {
+    max-width: 50%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 5px;
+    margin: 0 -5px;
+    
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+`;
+
 const ColorPalette = styled.div`
   display: flex;
   flex-direction: column;
@@ -61,22 +77,9 @@ const ColorPalette = styled.div`
 
   @media (max-width: 768px) {
     flex-direction: row;
-    overflow-x: auto;
-    padding: 5px;
-    margin: 0 -5px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    /* Add space for momentum scroll */
-    &::after {
-      content: '';
-      padding-right: 15px;
-    }
+    touch-action: pan-x;
+    min-width: min-content;
+    padding-right: 15px; /* Space for momentum scroll */
   }
 `;
 
@@ -91,9 +94,16 @@ const ColorButton = styled.button`
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 0 10px ${props => props.$color}80;
+  touch-action: manipulation;
   
   @media (max-width: 768px) {
     margin: 0 5px;
+    &:first-child {
+      margin-left: 0;
+    }
+    &:last-child {
+      margin-right: 0;
+    }
   }
   
   &:hover {
@@ -588,16 +598,18 @@ const DrawingCanvas = () => {
       </TopControls>
 
       <ControlsContainer>
-        <ColorPalette>
-          {COLORS.map((color) => (
-            <ColorButton
-              key={color}
-              $color={color}
-              $isSelected={selectedColor === color}
-              onClick={() => setSelectedColor(color)}
-            />
-          ))}
-        </ColorPalette>
+        <ColorPaletteContainer>
+          <ColorPalette>
+            {COLORS.map((color) => (
+              <ColorButton
+                key={color}
+                $color={color}
+                $isSelected={selectedColor === color}
+                onClick={() => setSelectedColor(color)}
+              />
+            ))}
+          </ColorPalette>
+        </ColorPaletteContainer>
         
         <BrushControls>
           <BrushSlider
