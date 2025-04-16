@@ -40,14 +40,17 @@ const ControlsContainer = styled.div`
   border: 1px solid rgba(255, 255, 255, 0.2);
 
   @media (max-width: 768px) {
-    left: 50%;
-    bottom: 20px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     top: auto;
-    transform: translateX(-50%);
+    transform: none;
     flex-direction: row;
     align-items: center;
     padding: 15px;
     gap: 15px;
+    border-radius: 15px 15px 0 0;
+    border-bottom: none;
   }
 `;
 
@@ -58,12 +61,30 @@ const ColorPalette = styled.div`
 
   @media (max-width: 768px) {
     flex-direction: row;
+    overflow-x: auto;
+    padding: 5px;
+    margin: 0 -5px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Add space for momentum scroll */
+    &::after {
+      content: '';
+      padding-right: 15px;
+    }
   }
 `;
 
 const ColorButton = styled.button`
   width: 40px;
   height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border-radius: 50%;
   border: 2px solid ${props => props.$isSelected ? '#fff' : 'transparent'};
   background: ${props => props.$color};
@@ -71,9 +92,17 @@ const ColorButton = styled.button`
   transition: all 0.3s ease;
   box-shadow: 0 0 10px ${props => props.$color}80;
   
+  @media (max-width: 768px) {
+    margin: 0 5px;
+  }
+  
   &:hover {
     transform: scale(1.1);
     box-shadow: 0 0 15px ${props => props.$color};
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 `;
 
@@ -81,6 +110,13 @@ const BrushControls = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    min-width: 120px;
+  }
 `;
 
 const BrushSlider = styled.input`
@@ -93,6 +129,12 @@ const BrushSlider = styled.input`
   margin: 10px 0;
   cursor: pointer;
 
+  @media (max-width: 768px) {
+    width: 120px;
+    margin: 0;
+    height: 6px;
+  }
+
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 20px;
@@ -102,10 +144,33 @@ const BrushSlider = styled.input`
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     transition: all 0.2s ease;
+
+    @media (max-width: 768px) {
+      width: 24px;
+      height: 24px;
+      box-shadow: 0 0 15px rgba(79, 172, 254, 0.5);
+    }
   }
 
   &::-webkit-slider-thumb:hover {
     transform: scale(1.1);
+  }
+`;
+
+const BrushSizeDisplay = styled.div`
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -190,18 +255,29 @@ const LogoButton = styled.button`
   letter-spacing: 0.2rem;
 
   @media (max-width: 768px) {
-    font-size: 1.2rem;
-    padding: 8px 16px;
+    font-size: 1rem;
+    padding: 8px 12px;
     top: 10px;
+    left: 10px;
+    transform: none;
+    letter-spacing: 0.1rem;
   }
 
   &:hover {
     transform: translateX(-50%) scale(1.05);
     text-shadow: 0 0 20px rgba(79, 172, 254, 0.8);
+
+    @media (max-width: 768px) {
+      transform: scale(1.05);
+    }
   }
 
   &:active {
     transform: translateX(-50%) scale(0.95);
+
+    @media (max-width: 768px) {
+      transform: scale(0.95);
+    }
   }
 `;
 
@@ -509,7 +585,6 @@ const DrawingCanvas = () => {
       <TopControls>
         <ActionButton onClick={saveArtwork}>Save</ActionButton>
         <ActionButton onClick={clearCanvas}>Clear</ActionButton>
-        <ActionButton onClick={() => navigate('/')}>Back</ActionButton>
       </TopControls>
 
       <ControlsContainer>
@@ -532,6 +607,9 @@ const DrawingCanvas = () => {
             value={brushSize}
             onChange={(e) => setBrushSize(parseInt(e.target.value))}
           />
+          <BrushSizeDisplay>
+            {brushSize}
+          </BrushSizeDisplay>
         </BrushControls>
       </ControlsContainer>
 
