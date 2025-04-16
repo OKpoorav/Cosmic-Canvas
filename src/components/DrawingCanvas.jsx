@@ -38,12 +38,27 @@ const ControlsContainer = styled.div`
   padding: 20px;
   border-radius: 15px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+
+  @media (max-width: 768px) {
+    left: 50%;
+    bottom: 20px;
+    top: auto;
+    transform: translateX(-50%);
+    flex-direction: row;
+    align-items: center;
+    padding: 15px;
+    gap: 15px;
+  }
 `;
 
 const ColorPalette = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+  }
 `;
 
 const ColorButton = styled.button`
@@ -101,6 +116,12 @@ const TopControls = styled.div`
   display: flex;
   gap: 10px;
   z-index: 1000;
+
+  @media (max-width: 768px) {
+    top: 10px;
+    right: 10px;
+    gap: 5px;
+  }
 `;
 
 const ActionButton = styled.button`
@@ -117,6 +138,11 @@ const ActionButton = styled.button`
     background: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
   }
+
+  @media (max-width: 768px) {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
 `;
 
 const EffectsControls = styled.div`
@@ -131,6 +157,10 @@ const EffectsControls = styled.div`
   padding: 10px;
   border-radius: 15px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+
+  @media (max-width: 768px) {
+    bottom: 100px;
+  }
 `;
 
 const EffectButton = styled(ActionButton)`
@@ -158,6 +188,12 @@ const LogoButton = styled.button`
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 0.2rem;
+
+  @media (max-width: 768px) {
+    font-size: 1.2rem;
+    padding: 8px 16px;
+    top: 10px;
+  }
 
   &:hover {
     transform: translateX(-50%) scale(1.05);
@@ -273,14 +309,18 @@ const DrawingCanvas = () => {
     return () => window.removeEventListener('resize', resizeCanvas);
   }, []);
 
-  const getCanvasPoint = useCallback((e) => {
+  const getEventPoint = useCallback((e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const dpr = dprRef.current;
     
+    // Handle both mouse and touch events
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
     return {
-      x: (e.clientX - rect.left) * dpr,
-      y: (e.clientY - rect.top) * dpr
+      x: (clientX - rect.left) * dpr,
+      y: (clientY - rect.top) * dpr
     };
   }, []);
 
@@ -338,51 +378,85 @@ const DrawingCanvas = () => {
     };
   }, [updateParticles]);
 
-  const draw = useCallback((e) => {
-    if (!isDrawingRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const point = getCanvasPoint(e);
-    
-    ctx.beginPath();
-    ctx.strokeStyle = selectedColor;
-    ctx.lineWidth = brushSize * dprRef.current;
-    
-    if (effects.glow) {
-      ctx.shadowBlur = brushSize * 2;
-      ctx.shadowColor = selectedColor;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-    } else {
-      ctx.shadowBlur = 0;
-    }
-
-    if (effects.motionBlur) {
-      ctx.globalAlpha = 0.8;
-    } else {
-      ctx.globalAlpha = 1;
-    }
-
-    ctx.moveTo(lastPointRef.current.x, lastPointRef.current.y);
-    ctx.lineTo(point.x, point.y);
-    ctx.stroke();
-
-    if (effects.particles) {
-      createParticles(point.x, point.y, selectedColor);
-    }
-
-    lastPointRef.current = point;
-  }, [selectedColor, brushSize, effects, createParticles, getCanvasPoint]);
-
-  const startDrawing = useCallback((e) => {
+  const handleStart = useCallback((e) => {
+    e.preventDefault(); // Prevent scrolling on mobile
     isDrawingRef.current = true;
-    lastPointRef.current = getCanvasPoint(e);
-  }, [getCanvasPoint]);
+    lastPointRef.current = getEventPoint(e);
+  }, [getEventPoint]);
 
-  const stopDrawing = () => {
+  const handleMove = useCallback((e) => {
+    e.preventDefault(); // Prevent scrolling on mobile
+    const point = getEventPoint(e);
+    setCursorPos({ x: e.touches ? e.touches[0].clientX : e.clientX, y: e.touches ? e.touches[0].clientY : e.clientY });
+    
+    if (isDrawingRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      
+      ctx.beginPath();
+      ctx.strokeStyle = selectedColor;
+      ctx.lineWidth = brushSize * dprRef.current;
+      
+      if (effects.glow) {
+        ctx.shadowBlur = brushSize * 2;
+        ctx.shadowColor = selectedColor;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+      } else {
+        ctx.shadowBlur = 0;
+      }
+
+      if (effects.motionBlur) {
+        ctx.globalAlpha = 0.8;
+      } else {
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.moveTo(lastPointRef.current.x, lastPointRef.current.y);
+      ctx.lineTo(point.x, point.y);
+      ctx.stroke();
+
+      if (effects.particles) {
+        createParticles(point.x, point.y, selectedColor);
+      }
+
+      lastPointRef.current = point;
+    }
+  }, [selectedColor, brushSize, effects, createParticles, getEventPoint]);
+
+  const handleEnd = useCallback(() => {
     isDrawingRef.current = false;
-  };
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    
+    // Add touch event listeners
+    canvas.addEventListener('touchstart', handleStart, { passive: false });
+    canvas.addEventListener('touchmove', handleMove, { passive: false });
+    canvas.addEventListener('touchend', handleEnd);
+    canvas.addEventListener('touchcancel', handleEnd);
+
+    // Add mouse event listeners
+    canvas.addEventListener('mousedown', handleStart);
+    canvas.addEventListener('mousemove', handleMove);
+    canvas.addEventListener('mouseup', handleEnd);
+    canvas.addEventListener('mouseleave', handleEnd);
+
+    return () => {
+      // Remove touch event listeners
+      canvas.removeEventListener('touchstart', handleStart);
+      canvas.removeEventListener('touchmove', handleMove);
+      canvas.removeEventListener('touchend', handleEnd);
+      canvas.removeEventListener('touchcancel', handleEnd);
+
+      // Remove mouse event listeners
+      canvas.removeEventListener('mousedown', handleStart);
+      canvas.removeEventListener('mousemove', handleMove);
+      canvas.removeEventListener('mouseup', handleEnd);
+      canvas.removeEventListener('mouseleave', handleEnd);
+    };
+  }, [handleStart, handleMove, handleEnd]);
 
   const clearCanvas = () => {
     const canvas = canvasRef.current;
@@ -405,19 +479,6 @@ const DrawingCanvas = () => {
     }));
   };
 
-  // Update cursor position
-  const handleMouseMove = useCallback((e) => {
-    setCursorPos({ x: e.clientX, y: e.clientY });
-    if (isDrawingRef.current) {
-      draw(e);
-    }
-  }, [draw]);
-
-  useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [handleMouseMove]);
-
   return (
     <CanvasContainer>
       <Canvas
@@ -426,22 +487,20 @@ const DrawingCanvas = () => {
       />
       <Canvas
         ref={canvasRef}
-        onMouseDown={startDrawing}
-        onMouseMove={handleMouseMove}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
         style={{ zIndex: 2 }}
       />
       
-      <BrushPreview
-        $size={brushSize * 2}
-        $color={selectedColor}
-        $isDrawing={isDrawingRef.current}
-        style={{
-          left: cursorPos.x,
-          top: cursorPos.y,
-        }}
-      />
+      {!('ontouchstart' in window) && (
+        <BrushPreview
+          $size={brushSize * 2}
+          $color={selectedColor}
+          $isDrawing={isDrawingRef.current}
+          style={{
+            left: cursorPos.x,
+            top: cursorPos.y,
+          }}
+        />
+      )}
 
       <LogoButton onClick={() => navigate('/')}>
         COSMIC CANVAS

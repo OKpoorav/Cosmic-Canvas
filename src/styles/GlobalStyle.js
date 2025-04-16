@@ -6,11 +6,15 @@ const GlobalStyle = createGlobalStyle`
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
   }
 
-  /* Apply custom cursor to all elements except canvas */
-  *:not(canvas) {
-    cursor: url(${cursorImage}) 16 16, auto !important;
+  /* Apply custom cursor to all elements except canvas, and only on non-touch devices */
+  @media (hover: hover) {
+    *:not(canvas) {
+      cursor: url(${cursorImage}) 16 16, auto !important;
+    }
   }
 
   body {
@@ -19,22 +23,32 @@ const GlobalStyle = createGlobalStyle`
     color: #fff;
     overflow: hidden;
     min-height: 100vh;
+    min-height: -webkit-fill-available;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+  }
+
+  html {
+    height: -webkit-fill-available;
   }
 
   #root {
     width: 100vw;
     height: 100vh;
+    height: -webkit-fill-available;
     overflow: hidden;
   }
 
   button {
     font-family: 'Orbitron', sans-serif;
+    -webkit-touch-callout: none;
+    user-select: none;
   }
 
   canvas {
     display: block;
+    touch-action: none;
   }
 
   ::-webkit-scrollbar {
