@@ -57,12 +57,13 @@ const ControlsContainer = styled.div`
 const ColorPaletteContainer = styled.div`
   @media (max-width: 768px) {
     max-width: 50%;
-    overflow-x: auto;
+    overflow-x: scroll;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding: 5px;
     margin: 0 -5px;
+    touch-action: pan-x;
     
     &::-webkit-scrollbar {
       display: none;
@@ -77,9 +78,10 @@ const ColorPalette = styled.div`
 
   @media (max-width: 768px) {
     flex-direction: row;
-    touch-action: pan-x;
-    min-width: min-content;
-    padding-right: 15px; /* Space for momentum scroll */
+    min-width: max-content;
+    padding-right: 15px;
+    gap: 10px;
+    touch-action: none;
   }
 `;
 
@@ -360,6 +362,10 @@ const DrawingCanvas = () => {
   const dprRef = useRef(window.devicePixelRatio || 1);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const colorPaletteRef = useRef(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollStartXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -565,6 +571,58 @@ const DrawingCanvas = () => {
     }));
   };
 
+  // Add these new handlers for color palette scrolling
+  const handlePaletteStart = useCallback((e) => {
+    if (!colorPaletteRef.current) return;
+    setIsScrolling(true);
+    const pageX = e.touches ? e.touches[0].pageX : e.pageX;
+    scrollStartXRef.current = pageX - colorPaletteRef.current.offsetLeft;
+    scrollLeftRef.current = colorPaletteRef.current.scrollLeft;
+  }, []);
+
+  const handlePaletteMove = useCallback((e) => {
+    if (!isScrolling || !colorPaletteRef.current) return;
+    e.preventDefault();
+    const pageX = e.touches ? e.touches[0].pageX : e.pageX;
+    const x = pageX - colorPaletteRef.current.offsetLeft;
+    const scroll = scrollLeftRef.current - (x - scrollStartXRef.current);
+    colorPaletteRef.current.scrollLeft = scroll;
+  }, [isScrolling]);
+
+  const handlePaletteEnd = useCallback(() => {
+    setIsScrolling(false);
+  }, []);
+
+  // Add effect for color palette touch events
+  useEffect(() => {
+    const container = colorPaletteRef.current;
+    if (!container) return;
+
+    const touchStart = (e) => {
+      handlePaletteStart(e);
+    };
+
+    const touchMove = (e) => {
+      handlePaletteMove(e);
+    };
+
+    const touchEnd = () => {
+      handlePaletteEnd();
+    };
+
+    container.addEventListener('touchstart', touchStart, { passive: false });
+    container.addEventListener('touchmove', touchMove, { passive: false });
+    container.addEventListener('touchend', touchEnd);
+    container.addEventListener('touchcancel', touchEnd);
+
+    return () => {
+      container.removeEventListener('touchstart', touchStart);
+      container.removeEventListener('touchmove', touchMove);
+      container.removeEventListener('touchend', touchEnd);
+      container.removeEventListener('touchcancel', touchEnd);
+    };
+  }, [handlePaletteStart, handlePaletteMove, handlePaletteEnd]);
+
   return (
     <CanvasContainer>
       <Canvas
@@ -598,14 +656,14 @@ const DrawingCanvas = () => {
       </TopControls>
 
       <ControlsContainer>
-        <ColorPaletteContainer>
+        <ColorPaletteContainer ref={colorPaletteRef}>
           <ColorPalette>
             {COLORS.map((color) => (
               <ColorButton
                 key={color}
                 $color={color}
                 $isSelected={selectedColor === color}
-                onClick={() => setSelectedColor(color)}
+                onClick={() => !isScrolling && setSelectedColor(color)}
               />
             ))}
           </ColorPalette>
