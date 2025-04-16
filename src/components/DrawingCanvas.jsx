@@ -133,6 +133,37 @@ const EffectButton = styled(ActionButton)`
   font-size: 12px;
 `;
 
+const LogoButton = styled.button`
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  z-index: 1000;
+  padding: 10px 20px;
+  text-shadow: 0 0 10px rgba(79, 172, 254, 0.5);
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.2rem;
+
+  &:hover {
+    transform: translateX(-50%) scale(1.05);
+    text-shadow: 0 0 20px rgba(79, 172, 254, 0.8);
+  }
+
+  &:active {
+    transform: translateX(-50%) scale(0.95);
+  }
+`;
+
 const COLORS = [
   '#00a8ff', // Bright blue
   '#ff3399', // Neon pink
@@ -341,6 +372,10 @@ const DrawingCanvas = () => {
         style={{ zIndex: 2 }}
       />
       
+      <LogoButton onClick={() => navigate('/')}>
+        COSMIC CANVAS
+      </LogoButton>
+
       <TopControls>
         <ActionButton onClick={saveArtwork}>Save</ActionButton>
         <ActionButton onClick={clearCanvas}>Clear</ActionButton>
