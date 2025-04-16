@@ -2,16 +2,15 @@ import { useEffect, useRef } from 'react';
 import styled from 'styled-components';
 
 const BackgroundCanvas = styled.canvas`
-  z-index: 1;
   position: fixed;
   top: 0;
   left: 0;
-  background: radial-gradient(circle at center, 
-    #2a0845 0%,
-    #1a0b2e 30%,
-    #150829 60%,
-    #0d0619 100%
-  );
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #0a0a2a 0%, #000000 100%);
+  opacity: ${props => props.isTransitioning ? 0 : 1};
+  transition: opacity 1s ease-out;
+  z-index: 1;
 `;
 
 class Star {
@@ -105,11 +104,11 @@ class Nebula {
   }
 }
 
-const Background = () => {
+const Background = ({ isTransitioning }) => {
   const canvasRef = useRef(null);
   const starsRef = useRef([]);
   const nebulasRef = useRef([]);
-  const animationFrameRef = useRef();
+  const requestRef = useRef();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -145,7 +144,7 @@ const Background = () => {
         star.draw(ctx);
       });
 
-      animationFrameRef.current = requestAnimationFrame(animate);
+      requestRef.current = requestAnimationFrame(animate);
     };
 
     handleResize();
@@ -161,13 +160,13 @@ const Background = () => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
       }
     };
   }, []);
 
-  return <BackgroundCanvas ref={canvasRef} />;
+  return <BackgroundCanvas ref={canvasRef} isTransitioning={isTransitioning} />;
 };
 
 export default Background; 

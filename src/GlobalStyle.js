@@ -1,37 +1,31 @@
 import { createGlobalStyle } from 'styled-components';
 
 export const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
-
   * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
   }
 
-  html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #000;
-    font-family: 'Orbitron', sans-serif;
-    color: #fff;
-    line-height: 1.5;
+  body {
+    font-family: 'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
   }
 
   #root {
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
   }
 
   button {
     font-family: 'Orbitron', sans-serif;
-    outline: none;
-    border: none;
   }
 
   canvas {

@@ -1,9 +1,9 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Background from './components/Background';
 import Galaxy from './components/Galaxy';
-import Tesseract from './components/Tesseract';
-import Planet3D from './components/Planet3D';
+import DrawingCanvas from './components/DrawingCanvas';
 import { GlobalStyle } from './GlobalStyle';
 
 const AppContainer = styled.div`
@@ -16,6 +16,7 @@ const AppContainer = styled.div`
   align-items: center;
   justify-content: flex-start;
   padding-top: 2rem;
+  background: #000;
 `;
 
 const Title = styled.h1`
@@ -34,6 +35,8 @@ const Title = styled.h1`
   z-index: 10;
   animation: glow 2s ease-in-out infinite alternate;
   will-change: transform, opacity;
+  opacity: ${props => props.isTransitioning ? 0 : 1};
+  transition: opacity 0.5s ease-out;
 
   @keyframes glow {
     from {
@@ -54,80 +57,104 @@ const ContentContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 2rem;
-`;
-
-const InteractiveContainer = styled.div`
-  position: relative;
-  width: 100%;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  gap: 4rem;
-  z-index: 2;
-  margin: 2rem 0;
-  
-  & > * {
-    flex-shrink: 0;
-  }
+  z-index: 10;
 `;
 
 const EnterButton = styled.button`
   font-family: 'Orbitron', sans-serif;
   font-size: 1.5rem;
-  padding: 1rem 3rem;
-  margin-bottom: 2rem;
-  background: transparent;
-  border: 1px solid rgba(79, 172, 254, 0.5);
+  padding: 1rem 2rem;
+  border: 2px solid rgba(79, 172, 254, 0.5);
+  border-radius: 30px;
+  background: rgba(0, 0, 0, 0.5);
   color: #4facfe;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  z-index: 10;
-  text-transform: uppercase;
-  letter-spacing: 0.2rem;
   overflow: hidden;
-  will-change: transform, background-color, box-shadow;
+  z-index: 10;
+  opacity: ${props => props.isTransitioning ? 0 : 1};
+  transform: translateY(${props => props.isTransitioning ? '20px' : '0'});
 
   &:before {
     content: '';
     position: absolute;
     top: 0;
-    left: 0;
+    left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, rgba(79, 172, 254, 0.2), rgba(0, 242, 254, 0.2));
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    z-index: -1;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(79, 172, 254, 0.2),
+      transparent
+    );
+    transition: 0.5s;
   }
 
   &:hover {
-    border-color: #00f2fe;
-    box-shadow: 0 0 20px rgba(79, 172, 254, 0.5);
-    
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(79, 172, 254, 0.3);
+    border-color: rgba(79, 172, 254, 0.8);
+
     &:before {
-      transform: translateX(0);
+      left: 100%;
     }
+  }
+
+  &:active {
+    transform: translateY(-1px);
   }
 `;
 
-function App() {
+// Landing Page Component
+const LandingPage = () => {
+  const navigate = useNavigate();
+  const galaxyRef = React.useRef(null);
+  const [isTransitioning, setIsTransitioning] = React.useState(false);
+
+  const handleEnterClick = () => {
+    setIsTransitioning(true);
+    if (galaxyRef.current) {
+      galaxyRef.current.startTransition();
+    }
+  };
+
   return (
     <AppContainer>
-      <GlobalStyle />
-      <Background />
-      <Galaxy />
+      <Background isTransitioning={isTransitioning} />
+      <Galaxy 
+        ref={galaxyRef} 
+        onTransitionComplete={() => {
+          navigate('/canvas');
+        }}
+      />
       <ContentContainer>
-        <Title>COSMIC CANVAS</Title>
-        <InteractiveContainer>
-          <Tesseract />
-          <Planet3D />
-        </InteractiveContainer>
-        <EnterButton>PAINT THE COSMOS</EnterButton>
+        <Title isTransitioning={isTransitioning}>
+          COSMIC CANVAS
+        </Title>
+        <EnterButton 
+          onClick={handleEnterClick}
+          isTransitioning={isTransitioning}
+        >
+          PAINT THE COSMOS
+        </EnterButton>
       </ContentContainer>
     </AppContainer>
   );
-}
+};
+
+// Main App Component
+const App = () => {
+  return (
+    <Router>
+      <GlobalStyle />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/canvas" element={<DrawingCanvas />} />
+      </Routes>
+    </Router>
+  );
+};
 
 export default App;
