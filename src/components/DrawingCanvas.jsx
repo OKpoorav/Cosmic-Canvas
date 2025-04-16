@@ -18,6 +18,11 @@ const Canvas = styled.canvas`
   left: 0;
   width: 100%;
   height: 100%;
+  cursor: none;
+
+  &:active {
+    cursor: none;
+  }
 `;
 
 const ControlsContainer = styled.div`
@@ -164,6 +169,47 @@ const LogoButton = styled.button`
   }
 `;
 
+const BrushPreview = styled.div`
+  position: fixed;
+  pointer-events: none;
+  width: ${props => props.$size}px;
+  height: ${props => props.$size}px;
+  border: 2px solid ${props => props.$color};
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s;
+  z-index: 9999;
+  opacity: 0.5;
+  box-shadow: 0 0 10px ${props => props.$color};
+  display: ${props => props.$isDrawing ? 'none' : 'block'};
+  background: ${props => props.$isDrawing ? props.$color : 'transparent'};
+`;
+
+const CustomCursor = styled.div`
+  position: fixed;
+  pointer-events: none;
+  width: ${props => props.size}px;
+  height: ${props => props.size}px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s;
+  z-index: 9999;
+  mix-blend-mode: difference;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 4px;
+    background: white;
+    border-radius: 50%;
+  }
+`;
+
 const COLORS = [
   '#00a8ff', // Bright blue
   '#ff3399', // Neon pink
@@ -190,6 +236,8 @@ const DrawingCanvas = () => {
   const particlesRef = useRef([]);
   const animationFrameRef = useRef(null);
   const dprRef = useRef(window.devicePixelRatio || 1);
+  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -357,6 +405,19 @@ const DrawingCanvas = () => {
     }));
   };
 
+  // Update cursor position
+  const handleMouseMove = useCallback((e) => {
+    setCursorPos({ x: e.clientX, y: e.clientY });
+    if (isDrawingRef.current) {
+      draw(e);
+    }
+  }, [draw]);
+
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [handleMouseMove]);
+
   return (
     <CanvasContainer>
       <Canvas
@@ -366,12 +427,22 @@ const DrawingCanvas = () => {
       <Canvas
         ref={canvasRef}
         onMouseDown={startDrawing}
-        onMouseMove={draw}
+        onMouseMove={handleMouseMove}
         onMouseUp={stopDrawing}
         onMouseLeave={stopDrawing}
         style={{ zIndex: 2 }}
       />
       
+      <BrushPreview
+        $size={brushSize * 2}
+        $color={selectedColor}
+        $isDrawing={isDrawingRef.current}
+        style={{
+          left: cursorPos.x,
+          top: cursorPos.y,
+        }}
+      />
+
       <LogoButton onClick={() => navigate('/')}>
         COSMIC CANVAS
       </LogoButton>
@@ -425,6 +496,15 @@ const DrawingCanvas = () => {
           Motion Blur
         </EffectButton>
       </EffectsControls>
+
+      <CustomCursor 
+        size={brushSize * 2}
+        style={{
+          left: cursorPos.x,
+          top: cursorPos.y,
+          backgroundColor: isDrawingRef.current ? `${selectedColor}33` : 'transparent'
+        }}
+      />
     </CanvasContainer>
   );
 };

@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import Background from './components/Background';
 import Galaxy from './components/Galaxy';
 import DrawingCanvas from './components/DrawingCanvas';
-import { GlobalStyle } from './GlobalStyle';
+import GlobalStyle from './styles/GlobalStyle';
 
 const AppContainer = styled.div`
   width: 100vw;
